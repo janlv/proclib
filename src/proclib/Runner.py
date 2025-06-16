@@ -9,16 +9,18 @@ from pathlib import Path
 from locale import getpreferredencoding
 
 import psutil
-from .utils import loop_until, safeopen, Timer, silentdelete, TimerThread, tail_file
 from proclib.Process import Process
+from proclib.Timer import Timer, TimerThread
 
 
 # Constants
-#CHILD_SEARCH_WAIT = 0.5        # Seconds to sleep during child process search
-#CHILD_SEARCH_LIMIT = 500       # Total number of iterations in child process search 
 SUSPEND_TIMER_PRECICION = 0.1  # Precision of the delayed-suspend-timer in seconds
 
 DEBUG = False
+
+#/////////////////////////////////////////////////////////////////////////////////
+#                                     Decorators
+#/////////////////////////////////////////////////////////////////////////////////
 
 
 #--------------------------------------------------------------------------------
@@ -41,16 +43,6 @@ def ignore_permission_error(func):
             pass
     return inner
 
-# #--------------------------------------------------------------------------------
-# def ignore_process_error(func):
-# #--------------------------------------------------------------------------------
-#     def inner(*args, **kwargs):
-#         try:
-#             return func(*args, **kwargs)
-#         except (psutil.NoSuchProcess, ProcessLookupError):
-#             return f'{args[0]._name} is missing'
-#     return inner
-
 #--------------------------------------------------------------------------------
 def pass_KeyboardInterrupt(func):
 #--------------------------------------------------------------------------------
@@ -61,6 +53,9 @@ def pass_KeyboardInterrupt(func):
             pass
     return inner
 
+#/////////////////////////////////////////////////////////////////////////////////
+#                                     Classes
+#/////////////////////////////////////////////////////////////////////////////////
 
 
 #====================================================================================
@@ -642,4 +637,88 @@ class Runner:                                                               # Ru
         print()
         print('  WARNING: ' + txt, **kwargs)
         print('', flush=True)
+
+
+
+#/////////////////////////////////////////////////////////////////////////////////
+#                                   Utility Functions
+#/////////////////////////////////////////////////////////////////////////////////
+
+
+#------------------------------------------------
+def loop_until(func, *args, limit=None, pause=None, loop_func=None, **kwargs):
+#------------------------------------------------
+    n = 0
+    if not loop_func:
+        loop_func = lambda:None
+    while True:
+        if func(*args, **kwargs):
+            return n
+        if pause:
+            sleep(pause)
+        n += 1
+        if limit and n > limit:
+            return -1
+        loop_func()
+
+#------------------------------------------------
+def safeopen(filename, mode):
+#------------------------------------------------
+    try:
+        filehandle = open(filename, mode)
+        return filehandle
+    except OSError as error:
+        raise SystemError(f'Unable to open file {filename}: {error}') from error
+
+#------------------------------------------------
+def silentdelete(*fname, echo=False):
+#------------------------------------------------
+    for f in fname:
+        file = Path(f)
+        try:
+            file.is_file() and file.unlink()
+        except (PermissionError, FileNotFoundError) as e:
+            if echo:
+                print(f'Unable to delete {f}: {e}')
+        if echo:
+            print(f'Deleted {f}')
+
+#--------------------------------------------------------------------------------
+def decode(data):
+#--------------------------------------------------------------------------------
+    encoding = ('utf-8', 'latin1')
+    for enc in encoding:
+        try:
+            return data.decode(encoding=enc)
+        except UnicodeError:
+            continue
+    raise SystemError(f'ERROR decode with {encoding} encoding failed!')
+
+#------------------------------------------------
+def tail_file(path, size=10*1024, size_limit=False):
+#------------------------------------------------
+    """ 
+    A generator that yields chunks the file starting from the end.
     
+    Arguments:
+        size : default, 10 kilobytes
+            byte-size of the file-chunks
+            
+        size_limit : default, False
+            return None if the size of the file is less than size   
+    """
+    path = Path(path)
+    if not path.is_file():
+        return
+    filesize = path.stat().st_size
+    if size_limit and filesize < size:
+        return
+    size = pos = min(size, filesize)
+    with open(path, 'rb') as file:
+        while pos <= filesize:
+            file.seek(-pos, 2)
+            yield decode(file.read(size))
+            if pos == filesize:
+                return
+            pos = min(pos + size, filesize)
+
