@@ -1,5 +1,5 @@
 from time import sleep
-from psutil import (STATUS_SLEEPING, STATUS_STOPPED, STATUS_ZOMBIE, ProcessLookupError, Process as psutil_Process, process_iter, wait_procs, 
+from psutil import (STATUS_SLEEPING, STATUS_STOPPED, STATUS_ZOMBIE, Process as psutil_Process, process_iter, wait_procs,
                     NoSuchProcess, AccessDenied)
 
 DEBUG = False
