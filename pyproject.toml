@@ -1,12 +1,9 @@
-[build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "proclib"
-version = "0.1.0"
 description = "A Python library for working with processes running on a computer."
-authors = [{ name = "Jan Ludvig Vinningland" }]
+authors = [
+    { name = "Jan Ludvig Vinningland", email = "janludvig@gmail.com" }
+    ]
 license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.10"
@@ -16,14 +13,25 @@ dependencies = [
     "psutil",
 ]
 
-# Optional dependencies
-#[project.optional-dependencies]
-#dev = [
-#    "black",
-#]
+# Version obtained automatically from the git-tag using setuptools_scm.
+# setuptools_scm dynamically determines the version based on the latest Git tag
+# and commit history, ensuring accurate versioning for the project.
+dynamic = ["version"]
+
+[build-system]
+requires = ["setuptools>=61.2.0", "wheel", "setuptools_scm"]
+# The build backend is set to setuptools.build_meta, which is the default for setuptools.
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+# This section configures setuptools_scm to use the version from the git tag.
+write_to = "src/proclib/_version.py"
 
 [tool.setuptools]
+# This is the directory where your package source code is located.
 package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
+# This tells setuptools to find packages in the "src" directory.
+# It will find all packages under "src" that have an __init__.py file.
 where = ["src"]
