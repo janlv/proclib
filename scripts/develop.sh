@@ -2,6 +2,11 @@
 
 set -e  # Exit on any error
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$SCRIPT_DIR/.."
+
+cd "$PROJECT_ROOT"
+
 # Extract project name from pyproject.toml (first "name" match)
 PACKAGE_NAME=$(grep -m1 '^name *= *' pyproject.toml | cut -d '"' -f2)
 VENV_DIR=".venv_${PACKAGE_NAME}"
