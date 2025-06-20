@@ -25,24 +25,6 @@ source "$VENV_DIR/bin/activate"
 echo "📦 Installing main project in editable mode ..."
 pip install -e .
 
-if [ -f requirements-dev.txt ]; then
-    echo "🧪 Installing development dependencies from requirements-dev.txt ..."
-    pip install -r requirements-dev.txt
-
-    # Check for any -e path in requirements-dev.txt and validate the folder exists
-    while IFS= read -r req; do
-        if [[ "$req" =~ ^-e[[:space:]]+(.+) ]]; then
-            REQ_PATH="${BASH_REMATCH[1]}"
-            if [ ! -d "$REQ_PATH" ]; then
-                echo "⚠️  Warning: editable path '$REQ_PATH' does not exist!" >&2
-            fi
-        fi
-    done < requirements-dev.txt
-
-else
-    echo "ℹ️ No requirements-dev.txt found – skipping dev dependencies."
-fi
-
 echo "✅ Development environment is ready!"
 echo "🔄 To activate, run: source $VENV_DIR/bin/activate"
 echo "💡 To deactivate, run: deactivate"
