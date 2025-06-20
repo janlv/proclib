@@ -1,5 +1,5 @@
-requirements-dev.txt
-develop.sh
+# .gitignore for proclib
+
 src/proclib/_version.py
 
 # Python
